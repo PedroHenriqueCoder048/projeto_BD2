@@ -1,10 +1,10 @@
-import os
 import struct
-
-from SQLRunner.config import Database
-
+from config import Database
 
 database = Database("miniDB");
+
+def cria_registro(id_aluno, matricula):
+    return struct.pack("ii", id_aluno, matricula)
 
 page = database.read_page(2)
 
