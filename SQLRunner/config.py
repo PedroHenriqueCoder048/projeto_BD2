@@ -56,9 +56,38 @@ class Database:
         offset = (par_page_number * self.PAGE_SIZE) + self.HEADER_SIZE + (slot * self.RECORD_SIZE)
         return offset
 
+    def create_header(self,user_id:int, transiction_id:int, operation:int, timestamp):
+        "Função que cria o registro de cabeçalho do arquivo de banco de dados"
+        " e registra a operação, as tabelas e os campos afetados"
+        struct.pack("iiii",user_id,transiction_id,operation,timestamp)  # Inicializa o cabeçalho com dois inteiros
+
+    def read_header(data):
+        return struct.unpack("iiii", data)
+
     def insert(self):
         print("inserindo dados")
 
+class Cache:
+
+    def __init__(self , database, capacity = 3):
+        self.database = database
+        self.capacity = capacity
+        self.pages = {}
+
+    def fixed(self,page_number):
+        if page_number in self.pages:
+            print(f"Página {page_number} veio do CACHE")
+            return self.pages[page_number]
+        page =  self.database.read_page(page_number)
+
+        print(f"Página {page_number} veio do .db")
+
+        if len(self.pages)>= self.capacity:
+            self.pages.pop(next(iter(self.pages)))
+
+        self.pages[page_number] = page
+
+        return page
 # class Tables(Database):
 #     def __init__(self, par_table_name:str):
 #         self.TABLE_NAME = Database.+f".{par_table_name}"

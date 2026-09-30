@@ -1,0 +1,2 @@
+Hoje foi implementado a função de cache, ainda não consegui implementar a logica de liberar 
+o espaço apenas de fixar 

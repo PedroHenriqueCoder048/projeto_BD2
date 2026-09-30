@@ -22,7 +22,3 @@ page[0:RECORD_SIZE] = registro
 
 miniDB.write_page(9, page)
 
-print("Registro gravado.")
-print("Página: 2")
-print("Slot: 0")
-print("Byte inicial:", 2 * miniDB.PAGE_SIZE)
