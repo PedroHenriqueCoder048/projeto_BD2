@@ -1,0 +1,10 @@
+﻿# Cache de páginas
+
+Módulo responsável pelo gerenciamento de páginas mantidas temporariamente em memória.
+Controla o carregamento e a permanência das páginas no cache.
+Mantém o controle das páginas que foram modificadas em memória.
+Páginas alteradas são marcadas como **sujas (dirty pages)**.
+Páginas sujas precisam ser escritas novamente no disco para preservar as alterações.
+O módulo também permite recuperar páginas armazenadas e controlar sua atualização.
+
+**Decisão de projeto mais difícil:** A decisão mais difícil foi definir como controlar o estado das páginas, especialmente a identificação das páginas sujas e o momento adequado para escrevê-las no disco. Essa escolha é importante porque evita perder alterações realizadas em memória sem realizar escritas desnecessárias no armazenamento.
