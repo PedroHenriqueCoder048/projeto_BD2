@@ -92,8 +92,6 @@ class Cache:
 #     def __init__(self, par_table_name:str):
 #         self.TABLE_NAME = Database.+f".{par_table_name}"
 
-#adição da arvore B+ no projeto
-
 from bisect import bisect_left, bisect_right
 
 
@@ -250,15 +248,20 @@ class BPlusTree:
 
         return results
 
-# teste da arvore B+
 
- from bplus_tree import BPlusTree
+
+# ============================================================
+# Teste da árvore B+ (arquivo teste_bplus.py)
+# Rode a partir da raiz do projeto: python teste_bplus.py
+# ============================================================
+
+from SQLRunner.config import BPlusTree
 
 tree = BPlusTree(order=4)
 
 #chaves para exemplo
 for key in [50, 20, 70, 10, 30, 60, 80, 40, 90]:
-    page_number = key // 100
+    page_number = key // 10
     slot = key % 10
 
     tree.insert(key, page_number, slot)
@@ -270,5 +273,4 @@ print("Busca 99:", tree.search(99))
 # Busca por intervalo.
 print("Intervalo 25 a 70:")
 for key, reference in tree.range_search(25, 70):
-    print(key, "->", reference) 
-
+    print(key, "->", reference)
