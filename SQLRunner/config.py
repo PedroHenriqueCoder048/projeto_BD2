@@ -35,19 +35,18 @@ class Database:
     def read_page(self, par_page_number:int):
         '''Função que realiza a leitura de uma página dos arquivos e caso ele não exista
         ele retorna um error'''
-        try:
-            with open(self.DB_FILE, "rb") as file_db:
-                position = par_page_number * self.PAGE_SIZE
-                file_db.seek(position)
 
-                data = file_db.read(self.PAGE_SIZE)
+        if not os.path.exists(self.DB_FILE):
 
-                if len(data) != self.PAGE_SIZE:
-                    raise ValueError("A página não existe ou está incompleta.")
+            return bytearray(self.PAGE_SIZE)
+            
+        with open(self.DB_FILE, "rb") as file_db:
+            position = par_page_number * self.PAGE_SIZE
+            file_db.seek(position)
 
-                return data
-        except FileNotFoundError:
-            raise FileNotFoundError(f"O arquivo {self.DB_FILE} não foi encontrado.")
+            data = file_db.read(self.PAGE_SIZE)
+
+        return bytearray(data + bytes(self.PAGE_SIZE - len(data)))
 
     def displacement(self, par_page_number:int, slot:int):
         '''Função que calcula o tamanho das paginas para se deslocar 
@@ -73,25 +72,70 @@ class Cache:
         self.database = database
         self.capacity = capacity
         self.pages = {}
+        self.dirty = set()   
 
-    def fixed(self,page_number):
-        if page_number in self.pages:
-            print(f"Página {page_number} veio do CACHE")
-            return self.pages[page_number]
-        page =  self.database.read_page(page_number)
+        self.pins = {}       
 
-        print(f"Página {page_number} veio do .db")
+ 
 
-        if len(self.pages)>= self.capacity:
-            self.pages.pop(next(iter(self.pages)))
+    def fixa(self, page_number):
 
-        self.pages[page_number] = page
+        if page_number not in self.pages:
 
-        return page
-# class Tables(Database):
-#     def __init__(self, par_table_name:str):
-#         self.TABLE_NAME = Database.+f".{par_table_name}"
+            if len(self.pages) >= self.capacity:
 
+                self._expulsa()
+
+            self.pages[page_number] = self.database.read_page(page_number)
+
+        self.pins[page_number] = self.pins.get(page_number, 0) + 1
+
+        return self.pages[page_number]
+
+ 
+
+    def solta(self, page_number, suja=False):
+
+        self.pins[page_number] -= 1
+
+        if suja:
+
+            self.dirty.add(page_number)
+
+ 
+
+    def _expulsa(self):
+
+        for n in list(self.pages):        # mais antiga primeiro
+
+            if self.pins.get(n, 0) == 0:  # ninguém usando
+
+                if n in self.dirty:       # suja: grava antes
+
+                    self.database.write_page(n, bytes(self.pages[n]))
+
+                    self.dirty.discard(n)
+
+                del self.pages[n]
+
+                return
+
+        raise RuntimeError("cache cheio: todas as páginas estão fixadas")
+
+ 
+
+    def descarrega(self):
+
+        for n in sorted(self.dirty):
+
+            self.database.write_page(n, bytes(self.pages[n]))
+
+        self.dirty.clear()
+
+ 
+
+    fixed = fixa   # o nome antigo continua funcionando
+    
 from bisect import bisect_left, bisect_right
 
 

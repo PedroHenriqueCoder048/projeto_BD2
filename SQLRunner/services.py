@@ -77,19 +77,10 @@ class Services:
 
 
 
-services = Services(database)
+if __name__ == "__main__":
 
-# services.insert_record(1, 12345)
+    services = Services(database)
 
-# services.read_record(2, database.read_page(2))
-services.insert_record(1, 20260001)
+    services.insert_record(1, 20260001)
 
-# database.write_page(0, b"A" * database.PAGE_SIZE)
-# database.write_page(1, b"B" * database.PAGE_SIZE)
-
-# p2 = database.read_page(0)
-services.to_sweep()
-
-
-# print(len(p2), p2 == b"A" * database.PAGE_SIZE)
-# print(database.read_page(1)[:1])
+    services.to_sweep()
