@@ -333,6 +333,8 @@ def _executa_create(arvore, catalogo, cache):
 
 
 def _executa_select(arvore, catalogo, cache):
+        if arvore.get("juncao") is not None:
+            raise NotImplementedError("JOIN ainda não é executado(próximo passo: laço aninhado)")
     primeira, esquema = catalogo.busca(arvore["tabela"])
     registros = le_registros(cache, primeira, esquema)
 
