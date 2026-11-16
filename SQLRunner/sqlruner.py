@@ -7,8 +7,8 @@ class ErroSintaxe(Exception):
 
 
 PALAVRAS_CHAVE = {"CREATE", "TABLE", "INSERT", "INTO", "VALUES",
-                  "SELECT", "FROM", "WHERE", "INT", "CHAR"}
-SIMBOLOS = "(),;*="
+                  "SELECT", "FROM", "WHERE", "INT", "CHAR" ,"JOIN" ,"ON" ,"SET"}
+SIMBOLOS = "(),;*=."
 
 
 def tokeniza(texto):
@@ -153,13 +153,30 @@ class Parser:
         self._consome("SIMBOLO", "*")
         self._consome("PALAVRA", "FROM")
         tabela = self._consome("NOME")
+
+        juncao = None
+        if self._olha() == ("PALAVRA", "JOIN"):
+            self.pos += 1
+            outra = self._consome("NOME")
+            self._consome("PALAVRA", "ON")
+            esquerda = self._nome_qualificado()
+            self._consome("SIMBOLO","=")
+            direita = self._nome_qualificado()
+            juncao = {"tabela":outra, "esquerda": esquerda, "direita": direita}
+        return {"op": "SELECT", "tabela": tabela, "onde": onde}
+        
         onde = None
         if self._olha() == ("PALAVRA", "WHERE"):
             self.pos += 1
             coluna = self._consome("NOME")
             self._consome("SIMBOLO", "=")
             onde = (coluna, self._valor())
-        return {"op": "SELECT", "tabela": tabela, "onde": onde}
+        return {"op": "SELECT", "tabela": tabela, "juncao": juncao, "onde":onde}
+    def _nome_qualificado(self):
+        tabela = self._consome("NOME")
+        self._consome("SIMBOLO", ".")
+        coluna = self._consome("NOME")
+        return(tabela, coluna)
 
 
 def analisa(texto):
