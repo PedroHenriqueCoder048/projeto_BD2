@@ -2,7 +2,8 @@ import os
 import struct
 
 from .juncao import laco_aninhado
-
+from .juncao import hash_join, laco_aninhado
+ALGORITMO_JUNCAO = {"hash": hash_join, "laco": laco_aninhado}
 
 class ErroSintaxe(Exception):
     pass
