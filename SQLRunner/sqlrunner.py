@@ -1,13 +1,15 @@
 import os
 import struct
 
+from .juncao import laco_aninhado
+
 
 class ErroSintaxe(Exception):
     pass
 
 
 PALAVRAS_CHAVE = {"CREATE", "TABLE", "INSERT", "INTO", "VALUES",
-                  "SELECT", "FROM", "WHERE", "INT", "CHAR" ,"JOIN" ,"ON" ,"SET"}
+"SELECT", "FROM", "WHERE", "INT", "CHAR", "JOIN", "ON", "SET" ,"INNER" ,"AND"}
 SIMBOLOS = "(),;*=."
 
 
@@ -155,27 +157,36 @@ class Parser:
         tabela = self._consome("NOME")
 
         juncao = None
-        if self._olha() == ("PALAVRA", "JOIN"):
+        if self._olha() == ("PALAVRA", "INNER"):
+            # INNER é opcional: "INNER JOIN" e "JOIN" significam a mesma coisa
             self.pos += 1
+            self._consome("PALAVRA", "JOIN")
+            juncao = True
+        elif self._olha() == ("PALAVRA", "JOIN"):
+            self.pos += 1
+            juncao = True
+        if juncao:
             outra = self._consome("NOME")
             self._consome("PALAVRA", "ON")
             esquerda = self._nome_qualificado()
-            self._consome("SIMBOLO","=")
+            self._consome("SIMBOLO", "=")
             direita = self._nome_qualificado()
-            juncao = {"tabela":outra, "esquerda": esquerda, "direita": direita}
-        
+            juncao = {"tabela": outra, "esquerda": esquerda, "direita": direita}
+
         onde = None
         if self._olha() == ("PALAVRA", "WHERE"):
             self.pos += 1
             coluna = self._consome("NOME")
             self._consome("SIMBOLO", "=")
             onde = (coluna, self._valor())
-        return {"op": "SELECT", "tabela": tabela, "juncao": juncao, "onde":onde}
+        return {"op": "SELECT", "tabela": tabela, "juncao": juncao, "onde": onde}
+
     def _nome_qualificado(self):
+        # tabela.coluna  ->  ("tabela", "coluna")
         tabela = self._consome("NOME")
         self._consome("SIMBOLO", ".")
         coluna = self._consome("NOME")
-        return(tabela, coluna)
+        return (tabela, coluna)
 
 
 def analisa(texto):
@@ -333,7 +344,7 @@ def _executa_create(arvore, catalogo, cache):
 
 def _executa_select(arvore, catalogo, cache):
     if arvore.get("juncao") is not None:
-            raise NotImplementedError("JOIN ainda não é executado(próximo passo: laço aninhado)")
+        return _executa_juncao(arvore, catalogo, cache)
     primeira, esquema = catalogo.busca(arvore["tabela"])
     registros = le_registros(cache, primeira, esquema)
 
@@ -348,7 +359,61 @@ def _executa_select(arvore, catalogo, cache):
             raise ErroSemantico(f"coluna {coluna} é {tipo}, veio {valor!r}")
         registros = [r for r in registros if r[indice] == valor]
 
+    return _formata(registros)
+
+
+def _formata(registros):
     linhas = ["|".join(str(v) for v in r) for r in registros]
     n = len(registros)
     linhas.append(f"({n} linha)" if n == 1 else f"({n} linhas)")
     return "\n".join(linhas)
+
+
+def _posicao_coluna(esquema, tabela, coluna):
+    # devolve (posição da coluna no registro, tipo da coluna)
+    nomes = [c[0] for c in esquema.colunas]
+    if coluna not in nomes:
+        raise ErroSemantico(f"coluna {tabela}.{coluna} não existe")
+    i = nomes.index(coluna)
+    return i, esquema.colunas[i][1]
+
+
+def _executa_juncao(arvore, catalogo, cache):
+    juncao = arvore["juncao"]
+    nome_a, nome_b = arvore["tabela"], juncao["tabela"]
+
+    # --- análise semântica ---
+    # 1) as duas tabelas existem (busca lança ErroSemantico se não existir)
+    primeira_a, esquema_a = catalogo.busca(nome_a)
+    primeira_b, esquema_b = catalogo.busca(nome_b)
+    if nome_a == nome_b:
+        raise ErroSemantico("JOIN de uma tabela com ela mesma não é suportado")
+
+    # 2) o ON compara uma coluna de a com uma de b (aceita a.x = b.y ou b.y = a.x)
+    esquerda, direita = juncao["esquerda"], juncao["direita"]
+    if (esquerda[0], direita[0]) == (nome_b, nome_a):
+        esquerda, direita = direita, esquerda
+    if (esquerda[0], direita[0]) != (nome_a, nome_b):
+        raise ErroSemantico(f"o ON deve comparar uma coluna de {nome_a} com uma de {nome_b}")
+
+    # 3) as colunas existem e os tipos batem (INT com INT, CHAR com CHAR)
+    i, tipo_a = _posicao_coluna(esquema_a, nome_a, esquerda[1])
+    j, tipo_b = _posicao_coluna(esquema_b, nome_b, direita[1])
+    if tipo_a != tipo_b:
+        raise ErroSemantico(f"tipos diferentes no ON: {nome_a}.{esquerda[1]} é {tipo_a}, "
+                            f"{nome_b}.{direita[1]} é {tipo_b}")
+
+    if arvore["onde"] is not None:
+        raise NotImplementedError("WHERE junto com JOIN ainda não é suportado")
+
+    # --- execução: laço aninhado ---
+    def varre_a():
+        return le_registros(cache, primeira_a, esquema_a)
+
+    def varre_b():
+        return le_registros(cache, primeira_b, esquema_b)
+
+    registros = list(laco_aninhado(varre_a, varre_b, i, j))
+    return _formata(registros)
+
+
