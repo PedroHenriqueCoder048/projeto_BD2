@@ -163,7 +163,6 @@ class Parser:
             self._consome("SIMBOLO","=")
             direita = self._nome_qualificado()
             juncao = {"tabela":outra, "esquerda": esquerda, "direita": direita}
-        return {"op": "SELECT", "tabela": tabela, "onde": onde}
         
         onde = None
         if self._olha() == ("PALAVRA", "WHERE"):
@@ -333,7 +332,7 @@ def _executa_create(arvore, catalogo, cache):
 
 
 def _executa_select(arvore, catalogo, cache):
-        if arvore.get("juncao") is not None:
+    if arvore.get("juncao") is not None:
             raise NotImplementedError("JOIN ainda não é executado(próximo passo: laço aninhado)")
     primeira, esquema = catalogo.busca(arvore["tabela"])
     registros = le_registros(cache, primeira, esquema)
