@@ -19,7 +19,7 @@ def hash_join(varre_a,varre_b,i,j):
         chave = linha[col_construcao]
         if chave not in tabela_hash:
             tabela_hash[chave]=[]
-            tabela_hash[chave].append(linha)
+        tabela_hash[chave].append(linha)
         
     for linha in sondagem:
         chave = linha[col_sondagem]
