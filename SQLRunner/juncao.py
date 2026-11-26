@@ -1,21 +1,32 @@
-'''Algoritmos de junção do MiniDB (Tópico 05 do guia).
-
-Cada algoritmo recebe:
-    varre_a, varre_b : funções SEM argumentos que, a cada chamada, devolvem as
-                       linhas da tabela do zero (cada linha é uma lista de valores).
-                       São funções, e não listas, porque o laço aninhado precisa
-                       reler a tabela b inteira para cada linha de a.
-    i                : posição (índice) da coluna de junção na tabela a
-    j                : posição (índice) da coluna de junção na tabela b
-
-E devolve (com yield) as linhas juntadas: colunas de a seguidas das colunas de b.
-'''
-
-
 def laco_aninhado(varre_a, varre_b, i, j):
-    # custo em páginas: B(a) + |a| · B(b)
-    #   B(a) = páginas de a, |a| = linhas de a, B(b) = páginas de b
-    for r in varre_a():              # laço de FORA: cada linha de a, uma vez
-        for s in varre_b():          # laço de DENTRO: relê b inteira para cada linha de a
-            if r[i] == s[j]:         # condição do ON: a.x = b.y
-                yield r + s          # linha de saída = colunas de a + colunas de b
+    for r in varre_a():              
+        for s in varre_b():          
+            if r[i] == s[j]:         
+                yield r + s         
+def hash_join(varre_a,varre_b,i,j):
+    linhas_a = list(varre_a())
+    linhas_b = list(varre_b()) #cada tabela pe lida uma unica vez
+    if len(linhas_a) <= len(linhas_b):
+        construcao,sondagem = linhas_a,linhas_b
+        col_construcao,col_sondagem= i,j
+        a_na_construcao = True
+    else:
+        construcao, sondagem = linhas_b, linhas_a
+        col_construcao, col_sondagem = j, i
+        a_na_construcao = False
+    tabela_hash = {}
+    for linha in construcao:
+        chave = linha[col_construcao]
+        if chave not in tabela_hash:
+            tabela_hash[chave]=[]
+            tabela_hash[chave].append(linha)
+        
+    for linha in sondagem:
+        chave = linha[col_sondagem]
+        for par in tabela_hash.get(chave,[]):
+            if a_na_construcao:
+                yield par + linha
+                yield linha + par
+
+                
+                
