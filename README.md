@@ -42,5 +42,5 @@ pip install -r requirements.txt
 - Rodar na minha máquina 
 
 ```
-python main.py
+python minidb.py dados.db
 ```
