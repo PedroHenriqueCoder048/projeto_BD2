@@ -26,6 +26,7 @@ def hash_join(varre_a,varre_b,i,j):
         for par in tabela_hash.get(chave,[]):
             if a_na_construcao:
                 yield par + linha
+            else:
                 yield linha + par
 
                 
