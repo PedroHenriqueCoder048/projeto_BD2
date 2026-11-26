@@ -2,7 +2,9 @@ def laco_aninhado(varre_a, varre_b, i, j):
     for r in varre_a():              
         for s in varre_b():          
             if r[i] == s[j]:         
-                yield r + s         
+                yield r + s    
+
+
 def hash_join(varre_a,varre_b,i,j):
     linhas_a = list(varre_a())
     linhas_b = list(varre_b()) #cada tabela pe lida uma unica vez
