@@ -383,8 +383,7 @@ def _executa_juncao(arvore, catalogo, cache):
     juncao = arvore["juncao"]
     nome_a, nome_b = arvore["tabela"], juncao["tabela"]
 
-    # --- análise semântica ---
-    # 1) as duas tabelas existem (busca lança ErroSemantico se não existir)
+  
     primeira_a, esquema_a = catalogo.busca(nome_a)
     primeira_b, esquema_b = catalogo.busca(nome_b)
     if nome_a == nome_b:
@@ -407,7 +406,11 @@ def _executa_juncao(arvore, catalogo, cache):
     if arvore["onde"] is not None:
         raise NotImplementedError("WHERE junto com JOIN ainda não é suportado")
 
-    # --- execução: laço aninhado ---
+    # --- execução ---
+    nome_algoritmo = os.environ.get("MINIDB_JUNCAO", "hash")
+    if nome_algoritmo not in ALGORITMOS_JUNCAO:
+        raise NotImplementedError(f"algoritmo de junção {nome_algoritmo} não existe (use hash ou laco)")
+    algoritmo = ALGORITMOS_JUNCAO[nome_algoritmo]
     def varre_a():
         return le_registros(cache, primeira_a, esquema_a)
 
