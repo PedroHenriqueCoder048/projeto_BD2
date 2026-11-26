@@ -1,7 +1,6 @@
 import os
 import struct
 
-from .juncao import laco_aninhado
 from .juncao import hash_join, laco_aninhado
 ALGORITMO_JUNCAO = {"hash": hash_join, "laco": laco_aninhado}
 
@@ -417,7 +416,7 @@ def _executa_juncao(arvore, catalogo, cache):
     def varre_b():
         return le_registros(cache, primeira_b, esquema_b)
 
-    registros = list(laco_aninhado(varre_a, varre_b, i, j))
+    registros = list(algoritmo(varre_a, varre_b, i, j))
     return _formata(registros)
 
 
