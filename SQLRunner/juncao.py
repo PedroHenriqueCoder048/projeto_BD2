@@ -5,9 +5,9 @@ def laco_aninhado(varre_a, varre_b, i, j):
                 yield r + s    
 
 
-def hash_join(varre_a,varre_b,i,j):
+def hash_join(varre_a,varre_b, i, j):
     linhas_a = list(varre_a())
-    linhas_b = list(varre_b()) #cada tabela pe lida uma unica vez
+    linhas_b = list(varre_b()) #cada tabela e lida uma unica vez
     if len(linhas_a) <= len(linhas_b):
         construcao,sondagem = linhas_a,linhas_b
         col_construcao,col_sondagem= i,j
@@ -20,7 +20,7 @@ def hash_join(varre_a,varre_b,i,j):
     for linha in construcao:
         chave = linha[col_construcao]
         if chave not in tabela_hash:
-            tabela_hash[chave]=[]
+            tabela_hash[chave] = []
         tabela_hash[chave].append(linha)
         
     for linha in sondagem:
